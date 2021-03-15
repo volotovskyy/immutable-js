@@ -1144,6 +1144,125 @@ declare module Immutable {
     defaultValues: {[key: string]: any}, name?: string
   ): Record.Class;
 
+  export interface Record<TProps extends Object> {
+
+    // Reading values
+
+    has(key: string): key is keyof TProps & string;
+
+    /**
+     * Returns the value associated with the provided key, which may be the
+     * default value defined when creating the Record factory function.
+     *
+     * If the requested key is not defined by this Record type, then
+     * notSetValue will be returned if provided. Note that this scenario would
+     * produce an error when using Flow or TypeScript.
+     */
+    get<K extends keyof TProps>(key: K, notSetValue?: unknown): TProps[K];
+    get<T>(key: string, notSetValue: T): T;
+
+    // Reading deep values
+
+    hasIn(keyPath: Iterable<any, any>): boolean;
+    getIn(keyPath: Iterable<any, any>): unknown;
+
+    // Value equality
+
+    equals(other: unknown): boolean;
+    hashCode(): number;
+
+    // Persistent changes
+
+    set<K extends keyof TProps>(key: K, value: TProps[K]): this;
+    update<K extends keyof TProps>(key: K, updater: (value: TProps[K]) => TProps[K]): this;
+    merge(...collections: Array<Partial<TProps> | Iterable<any, any>>): this;
+    mergeDeep(...collections: Array<Partial<TProps> | Iterable<any, any>>): this;
+
+    mergeWith(
+      merger: (oldVal: unknown, newVal: unknown, key: keyof TProps) => unknown,
+      ...collections: Array<Partial<TProps> | Iterable<any, any>>
+    ): this;
+    mergeDeepWith(
+      merger: (oldVal: unknown, newVal: unknown, key: unknown) => unknown,
+      ...collections: Array<Partial<TProps> | Iterable<any, any>>
+    ): this;
+
+    /**
+     * Returns a new instance of this Record type with the value for the
+     * specific key set to its default value.
+     *
+     * @alias remove
+     */
+    delete<K extends keyof TProps>(key: K): this;
+    remove<K extends keyof TProps>(key: K): this;
+
+    /**
+     * Returns a new instance of this Record type with all values set
+     * to their default values.
+     */
+    clear(): this;
+
+    // Deep persistent changes
+
+    setIn(keyPath: Iterable<any, any>, value: unknown): this;
+    updateIn(keyPath: Iterable<any, any>, updater: (value: unknown) => unknown): this;
+    mergeIn(keyPath: Iterable<any, any>, ...collections: Array<unknown>): this;
+    mergeDeepIn(keyPath: Iterable<any, any>, ...collections: Array<unknown>): this;
+
+    /**
+     * @alias removeIn
+     */
+    deleteIn(keyPath: Iterable<any, any>): this;
+    removeIn(keyPath: Iterable<any, any>): this;
+
+    // Conversion to JavaScript types
+
+    /**
+     * Deeply converts this Record to equivalent native JavaScript Object.
+     *
+     * Note: This method may not be overridden. Objects with custom
+     * serialization to plain JS may override toJSON() instead.
+     */
+    toJS(): { [K in keyof TProps]: unknown };
+
+    /**
+     * Shallowly converts this Record to equivalent native JavaScript Object.
+     */
+    toJSON(): TProps;
+
+    /**
+     * Shallowly converts this Record to equivalent JavaScript Object.
+     */
+    toObject(): TProps;
+
+    // Transient changes
+
+    /**
+     * Note: Not all methods can be used on a mutable collection or within
+     * `withMutations`! Only `set` may be used mutatively.
+     *
+     * @see `Map#withMutations`
+     */
+    withMutations(mutator: (mutable: this) => unknown): this;
+
+    /**
+     * @see `Map#asMutable`
+     */
+    asMutable(): this;
+
+    /**
+     * @see `Map#wasAltered`
+     */
+    wasAltered(): boolean;
+
+    /**
+     * @see `Map#asImmutable`
+     */
+    asImmutable(): this;
+
+    [Symbol.iterator](): IterableIterator<[keyof TProps, TProps[keyof TProps]]>;
+  }
+
 
   /**
    * Represents a sequence of values, but may not be backed by a concrete data
