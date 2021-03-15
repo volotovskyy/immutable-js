@@ -5,29 +5,31 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const { Record } = require('../');
+jest.autoMockOff();
+
+var Immutable = require('immutable');
+var Record = Immutable.Record;
 
 describe('Record', () => {
-  it('defines a record factory', () => {
-    const MyType = Record({ a: 1, b: 2, c: 3 });
 
-    const t = MyType();
-    const t2 = t.set('a', 10);
+  it('defines a constructor', () => {
+    var MyType = Record({a:1, b:2, c:3});
+
+    var t = new MyType();
+    var t2 = t.set('a', 10);
 
     expect(t.a).toBe(1);
     expect(t2.a).toBe(10);
   });
 
   it('can have mutations apply', () => {
-    const MyType = Record({ a: 1, b: 2, c: 3 });
+    var MyType = Record({a:1, b:2, c:3});
 
-    const t = MyType();
+    var t = new MyType();
 
-    expect(() => {
-      t.a = 10;
-    }).toThrow();
+    expect(() => { t.a = 10; }).toThrow();
 
-    const t2 = t.withMutations(mt => {
+    var t2 = t.withMutations(mt => {
       mt.a = 10;
       mt.b = 20;
       mt.c = 30;
@@ -38,40 +40,32 @@ describe('Record', () => {
   });
 
   it('can be subclassed', () => {
-    class Alphabet extends Record({ a: 1, b: 2, c: 3 }) {
+
+    class Alphabet extends Record({a:1, b:2, c:3}) {
       soup() {
         return this.a + this.b + this.c;
       }
     }
 
-    // Note: `new` is only used because of `class`
-    const t = new Alphabet();
-    const t2 = t.set('b', 200);
+    var t = new Alphabet();
+    var t2 = t.set('b', 200);
 
     expect(t instanceof Record);
     expect(t instanceof Alphabet);
     expect(t.soup()).toBe(6);
     expect(t2.soup()).toBe(204);
-
-    // Uses class name as descriptive name
-    expect(Record.getDescriptiveName(t)).toBe('Alphabet');
-
-    // Uses display name over class name
-    class NotADisplayName extends Record({ x: 1 }, 'DisplayName') {}
-    const t3 = new NotADisplayName();
-    expect(Record.getDescriptiveName(t3)).toBe('DisplayName');
   });
 
   it('can be cleared', () => {
-    const MyType = Record({ a: 1, b: 2, c: 3 });
-    let t = MyType({ c: 'cats' });
+    var MyType = Record({a:1, b:2, c:3});
+    var t = new MyType({c:'cats'});
 
     expect(t.c).toBe('cats');
     t = t.clear();
     expect(t.c).toBe(3);
 
-    const MyType2 = Record({ d: 4, e: 5, f: 6 });
-    let t2 = MyType2({ d: 'dogs' });
+    var MyType2 = Record({d:4, e:5, f:6});
+    var t2 = new MyType2({d:'dogs'});
 
     expect(t2.d).toBe('dogs');
     t2 = t2.clear();

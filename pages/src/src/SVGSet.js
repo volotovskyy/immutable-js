@@ -7,6 +7,7 @@
 
 var React = require('react');
 
+
 var SVGSet = React.createClass({
   render: function() {
     return (
@@ -14,7 +15,8 @@ var SVGSet = React.createClass({
         {this.props.children}
       </svg>
     );
-  },
+  }
 });
+
 
 module.exports = SVGSet;

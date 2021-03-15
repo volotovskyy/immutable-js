@@ -6,47 +6,48 @@
  */
 
 ///<reference path='../resources/jest.d.ts'/>
+///<reference path='../dist/immutable.d.ts'/>
 
-import { Seq } from '../';
+jest.autoMockOff();
+
+import { Seq } from 'immutable';
 
 describe('ObjectSequence', () => {
+
   it('maps', () => {
-    const i = Seq({ a: 'A', b: 'B', c: 'C' });
-    const m = i.map(x => x + x).toObject();
-    expect(m).toEqual({ a: 'AA', b: 'BB', c: 'CC' });
+    var i = Seq({'a': 'A', 'b': 'B', 'c': 'C'});
+    var m = i.map(x => x + x).toObject();
+    expect(m).toEqual({'a': 'AA', 'b': 'BB', 'c': 'CC'});
   });
 
   it('reduces', () => {
-    const i = Seq({ a: 'A', b: 'B', c: 'C' });
-    const r = i.reduce<string>((acc, x) => acc + x, '');
+    var i = Seq({'a': 'A', 'b': 'B', 'c': 'C'});
+    var r = i.reduce<string>((r, x) => r + x, '');
     expect(r).toEqual('ABC');
   });
 
   it('extracts keys', () => {
-    const i = Seq({ a: 'A', b: 'B', c: 'C' });
-    const k = i.keySeq().toArray();
+    var i = Seq({'a': 'A', 'b': 'B', 'c': 'C'});
+    var k = i.keySeq().toArray();
     expect(k).toEqual(['a', 'b', 'c']);
   });
 
   it('is reversable', () => {
-    const i = Seq({ a: 'A', b: 'B', c: 'C' });
-    const k = i.reverse().toArray();
-    expect(k).toEqual([['c', 'C'], ['b', 'B'], ['a', 'A']]);
+    var i = Seq({'a': 'A', 'b': 'B', 'c': 'C'});
+    var k = i.reverse().toArray();
+    expect(k).toEqual(['C', 'B', 'A']);
   });
 
-  it('is double reversable', () => {
-    const i = Seq({ a: 'A', b: 'B', c: 'C' });
-    const k = i
-      .reverse()
-      .reverse()
-      .toArray();
-    expect(k).toEqual([['a', 'A'], ['b', 'B'], ['c', 'C']]);
+  it('can double reversable', () => {
+    var i = Seq({'a': 'A', 'b': 'B', 'c': 'C'});
+    var k = i.reverse().reverse().toArray();
+    expect(k).toEqual(['A', 'B', 'C']);
   });
 
   it('can be iterated', () => {
-    const obj = { a: 1, b: 2, c: 3 };
-    const seq = Seq(obj);
-    const entries = seq.entries();
+    var obj = { a: 1, b: 2, c: 3 };
+    var seq = Seq(obj);
+    var entries = seq.entries();
     expect(entries.next()).toEqual({ value: ['a', 1], done: false });
     expect(entries.next()).toEqual({ value: ['b', 2], done: false });
     expect(entries.next()).toEqual({ value: ['c', 3], done: false });
@@ -54,11 +55,11 @@ describe('ObjectSequence', () => {
   });
 
   it('cannot be mutated after calling toObject', () => {
-    const seq = Seq({ a: 1, b: 2, c: 3 });
+    var seq = Seq({ a: 1, b: 2, c: 3 });
 
-    const obj = seq.toObject();
-    obj.c = 10;
-    const seq2 = Seq(obj);
+    var obj = seq.toObject();
+    obj['c'] = 10;
+    var seq2 = Seq(obj);
 
     expect(seq.get('c')).toEqual(3);
     expect(seq2.get('c')).toEqual(10);

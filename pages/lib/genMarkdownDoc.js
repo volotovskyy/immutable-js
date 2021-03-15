@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+require('node-jsx').install({harmony: true});
 var markdown = require('./markdown');
 var defs = require('./getTypeDefs');
+
 
 function genMarkdownDoc(typeDefSource) {
   return markdown(
@@ -14,7 +16,7 @@ function genMarkdownDoc(typeDefSource) {
     {
       defs,
       typePath: ['Immutable'],
-      relPath: 'docs/',
+      relPath: 'docs/'
     }
   );
 }

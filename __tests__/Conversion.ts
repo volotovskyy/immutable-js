@@ -6,176 +6,152 @@
  */
 
 ///<reference path='../resources/jest.d.ts'/>
+///<reference path='../dist/immutable.d.ts'/>
+
+jest.autoMockOff();
 
 import * as jasmineCheck from 'jasmine-check';
-import { fromJS, is, List, Map, OrderedMap, Record } from '../';
 jasmineCheck.install();
 
+import { Map, OrderedMap, List, Record, is, fromJS } from 'immutable';
+
+declare function expect(val: any): ExpectWithIs;
+
+interface ExpectWithIs extends Expect {
+  is(expected: any): void;
+  not: ExpectWithIs;
+}
+
 // Symbols
-declare function Symbol(name: string): any;
+declare function Symbol(name: string): Object;
 
 describe('Conversion', () => {
+
+  beforeEach(function () {
+    this.addMatchers({
+      is: function(expected) {
+        return is(this.actual, expected);
+      }
+    });
+  });
+
   // Note: order of keys based on Map's hashing order
-  const js = {
+  var js = {
     deepList: [
       {
-        position: 'first',
+        position: "first"
       },
       {
-        position: 'second',
+        position: "second"
       },
       {
-        position: 'third',
+        position: "third"
       },
     ],
     deepMap: {
-      a: 'A',
-      b: 'B',
+      a: "A",
+      b: "B"
     },
     emptyMap: Object.create(null),
-    point: { x: 10, y: 20 },
-    string: 'Hello',
-    list: [1, 2, 3],
+    point: {x: 10, y: 20},
+    string: "Hello",
+    list: [1, 2, 3]
   };
 
-  const Point = Record({ x: 0, y: 0 }, 'Point');
+  var Point = Record({x:0, y:0}, 'Point');
 
-  const immutableData = Map({
+  var immutableData = Map({
     deepList: List.of(
       Map({
-        position: 'first',
+        position: "first"
       }),
       Map({
-        position: 'second',
+        position: "second"
       }),
       Map({
-        position: 'third',
+        position: "third"
       })
     ),
     deepMap: Map({
-      a: 'A',
-      b: 'B',
+      a: "A",
+      b: "B"
     }),
     emptyMap: Map(),
-    point: Map({ x: 10, y: 20 }),
-    string: 'Hello',
-    list: List.of(1, 2, 3),
+    point: Map({x: 10, y: 20}),
+    string: "Hello",
+    list: List.of(1, 2, 3)
   });
 
-  const immutableOrderedData = OrderedMap({
+  var immutableOrderedData = OrderedMap({
     deepList: List.of(
       OrderedMap({
-        position: 'first',
+        position: "first"
       }),
       OrderedMap({
-        position: 'second',
+        position: "second"
       }),
       OrderedMap({
-        position: 'third',
+        position: "third"
       })
     ),
     deepMap: OrderedMap({
-      a: 'A',
-      b: 'B',
+      a: "A",
+      b: "B"
     }),
     emptyMap: OrderedMap(),
-    point: new Point({ x: 10, y: 20 }),
-    string: 'Hello',
-    list: List.of(1, 2, 3),
+    point: new Point({x: 10, y: 20}),
+    string: "Hello",
+    list: List.of(1, 2, 3)
   });
 
-  const immutableOrderedDataString =
-    'OrderedMap { ' +
-    '"deepList": List [ ' +
-    'OrderedMap { ' +
-    '"position": "first"' +
-    ' }, ' +
-    'OrderedMap { ' +
-    '"position": "second"' +
-    ' }, ' +
-    'OrderedMap { ' +
-    '"position": "third"' +
-    ' }' +
-    ' ], ' +
-    '"deepMap": OrderedMap { ' +
-    '"a": "A", ' +
-    '"b": "B"' +
-    ' }, ' +
+  var immutableOrderedDataString = 'OrderedMap { ' +
+    '"deepList": List [ '+
+      'OrderedMap { '+
+        '"position": "first"'+
+      ' }, ' +
+      'OrderedMap { '+
+        '"position": "second"'+
+      ' }, '+
+      'OrderedMap { '+
+        '"position": "third"'+
+      ' }' +
+    ' ], '+
+    '"deepMap": OrderedMap { '+
+      '"a": "A", '+
+      '"b": "B"'+
+    ' }, '+
     '"emptyMap": OrderedMap {}, ' +
-    '"point": Point { x: 10, y: 20 }, ' +
-    '"string": "Hello", ' +
-    '"list": List [ 1, 2, 3 ]' +
-    ' }';
+    '"point": Point { "x": 10, "y": 20 }, '+
+    '"string": "Hello", '+
+    '"list": List [ 1, 2, 3 ]'+
+  ' }';
 
-  const nonStringKeyMap = OrderedMap()
-    .set(1, true)
-    .set(false, 'foo');
-  const nonStringKeyMapString = 'OrderedMap { 1: true, false: "foo" }';
+  var nonStringKeyMap = OrderedMap().set(1, true).set(false, "foo");
+  var nonStringKeyMapString = 'OrderedMap { 1: true, false: "foo" }';
 
   it('Converts deep JS to deep immutable sequences', () => {
-    expect(fromJS(js)).toEqual(immutableData);
-  });
-
-  it('Throws when provided circular reference', () => {
-    const o = { a: { b: { c: null as any } } };
-    o.a.b.c = o;
-    expect(() => fromJS(o)).toThrow(
-      'Cannot convert circular structure to Immutable'
-    );
+    expect(fromJS(js)).is(immutableData);
   });
 
   it('Converts deep JSON with custom conversion', () => {
-    const seq = fromJS(js, function(key, sequence) {
+    var seq = fromJS(js, function (key, sequence) {
       if (key === 'point') {
         return new Point(sequence);
       }
-      return Array.isArray(this[key])
-        ? sequence.toList()
-        : sequence.toOrderedMap();
+      return Array.isArray(this[key]) ? sequence.toList() : sequence.toOrderedMap();
     });
-    expect(seq).toEqual(immutableOrderedData);
-    expect(seq.toString()).toEqual(immutableOrderedDataString);
+    expect(seq).is(immutableOrderedData);
+    expect(seq.toString()).is(immutableOrderedDataString);
   });
 
-  it('Converts deep JSON with custom conversion including keypath if requested', () => {
-    const paths: Array<any> = [];
-    const seq1 = fromJS(js, function(key, sequence, keypath) {
-      expect(arguments.length).toBe(3);
-      paths.push(keypath);
-      return Array.isArray(this[key])
-        ? sequence.toList()
-        : sequence.toOrderedMap();
-    });
-    expect(paths).toEqual([
-      [],
-      ['deepList'],
-      ['deepList', 0],
-      ['deepList', 1],
-      ['deepList', 2],
-      ['deepMap'],
-      ['emptyMap'],
-      ['point'],
-      ['list'],
-    ]);
-    const seq2 = fromJS(js, function(key, sequence) {
-      expect(arguments[2]).toBe(undefined);
-    });
+  it('Prints keys as JSON values', () => {
+    expect(nonStringKeyMap.toString()).is(nonStringKeyMapString);
   });
 
-  it('Prints keys as JS values', () => {
-    expect(nonStringKeyMap.toString()).toEqual(nonStringKeyMapString);
-  });
-
-  it('Converts deep sequences to JS', () => {
-    const js2 = immutableData.toJS();
-    expect(is(js2, js)).toBe(false); // raw JS is not immutable.
-    expect(js2).toEqual(js); // but should be deep equal.
-  });
-
-  it('Converts shallowly to JS', () => {
-    const js2 = immutableData.toJSON();
-    expect(js2).not.toEqual(js);
-    expect(js2.deepList).toBe(immutableData.get('deepList'));
+  it('Converts deep sequences to JSON', () => {
+    var json = immutableData.toJS();
+    expect(json).not.is(js); // raw JS is not immutable.
+    expect(json).toEqual(js); // but should be deep equal.
   });
 
   it('JSON.stringify() works equivalently on immutable sequences', () => {
@@ -183,39 +159,34 @@ describe('Conversion', () => {
   });
 
   it('JSON.stringify() respects toJSON methods on values', () => {
-    const Model = Record({});
-    Model.prototype.toJSON = function() {
-      return 'model';
-    };
-    expect(Map({ a: new Model() }).toJS()).toEqual({ a: {} });
-    expect(JSON.stringify(Map({ a: new Model() }))).toEqual('{"a":"model"}');
+    var Model = Record({});
+    Model.prototype.toJSON = function() { return 'model'; }
+    expect(
+      Map({ a: new Model() }).toJS()
+    ).toEqual({ "a": {} });
+    expect(
+      JSON.stringify(Map({ a: new Model() }))
+    ).toEqual('{"a":"model"}');
   });
 
   it('is conservative with array-likes, only accepting true Arrays.', () => {
-    expect(fromJS({ 1: 2, length: 3 })).toEqual(
-      Map()
-        .set('1', 2)
-        .set('length', 3)
+    expect(fromJS({1: 2, length: 3})).is(
+      Map().set('1', 2).set('length', 3)
     );
     expect(fromJS('string')).toEqual('string');
   });
 
-  check.it('toJS isomorphic value', { maxSize: 30 }, [gen.JSONValue], v => {
-    const imm = fromJS(v);
-    expect(imm && imm.toJS ? imm.toJS() : imm).toEqual(v);
+  check.it('toJS isomorphic value', {maxSize: 30}, [gen.JSONValue], (js) => {
+    var imm = fromJS(js);
+    expect(imm && imm.toJS ? imm.toJS() : imm).toEqual(js);
   });
 
   it('Explicitly convert values to string using String constructor', () => {
-    expect(() => fromJS({ foo: Symbol('bar') }) + '').not.toThrow();
-    expect(() => Map().set('foo', Symbol('bar')) + '').not.toThrow();
-    expect(() => Map().set(Symbol('bar'), 'foo') + '').not.toThrow();
+    expect(() => {
+      fromJS({ foo: Symbol('bar') }) + '';
+      Map().set('foo', Symbol('bar')) + '';
+      Map().set(Symbol('bar'), 'foo') + '';
+    }).not.toThrow();
   });
 
-  it('Converts an immutable value of an entry correctly', () => {
-    const arr = [{ key: 'a' }];
-    const result = fromJS(arr)
-      .entrySeq()
-      .toJS();
-    expect(result).toEqual([[0, { key: 'a' }]]);
-  });
 });
